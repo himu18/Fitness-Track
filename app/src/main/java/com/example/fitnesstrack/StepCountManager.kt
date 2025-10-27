@@ -65,27 +65,24 @@ object StepCountManager {
         val today = LocalDate.now().format(DateTimeFormatter.ISO_DATE)
         val yesterday = LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_DATE)
         
-        // Save yesterday's steps to history before resetting
         val yesterdaySteps = prefs.getInt("history_$yesterday", 0)
         if (yesterdaySteps == 0) {
             val currentSteps = prefs.getInt(KEY_CURRENT_STEPS, 0)
             if (currentSteps > 0) {
-                // Save yesterday's data
                 prefs.edit().putInt("history_$yesterday", currentSteps).commit()
             }
         }
         
-        // Reset for new day
         prefs.edit()
             .putInt(KEY_CURRENT_STEPS, 0)
             .putString(KEY_LAST_DATE, today)
-            .putInt(KEY_STEP_COUNTER_BASE, -1) // Reset base for new day
-            .commit() // Use commit() for immediate persistence
+            .putInt(KEY_STEP_COUNTER_BASE, -1)
+            .commit()
     }
     
     fun getDailyGoal(context: Context): Int {
         val prefs = getPrefs(context)
-        return prefs.getInt(KEY_DAILY_GOAL, 10000) // Default 10000 steps
+        return prefs.getInt(KEY_DAILY_GOAL, 100)
     }
     
     fun setDailyGoal(context: Context, goal: Int) {
@@ -106,7 +103,7 @@ object StepCountManager {
     fun saveDailyHistory(context: Context, steps: Int) {
         val prefs = getPrefs(context)
         val date = LocalDate.now().format(DateTimeFormatter.ISO_DATE)
-        prefs.edit().putInt("history_$date", steps).commit() // Use commit() for immediate persistence
+        prefs.edit().putInt("history_$date", steps).commit()
     }
     
     fun getHistoryData(context: Context, days: Int = 7): List<Pair<String, Int>> {
@@ -114,11 +111,9 @@ object StepCountManager {
         val formatter = DateTimeFormatter.ISO_DATE
         val today = LocalDate.now()
         
-        // Save current day's steps to history
         val currentSteps = getCurrentSteps(context)
         saveDailyHistory(context, currentSteps)
         
-        // Clean up old data (keep only last 7 days)
         cleanupOldHistory(context)
         
         val history = mutableListOf<Pair<String, Int>>()
@@ -138,21 +133,13 @@ object StepCountManager {
         val editor = prefs.edit()
         val today = LocalDate.now()
         
-        // Remove data older than 7 days
         for (i in 7..30) {
             val date = today.minusDays(i.toLong())
             val dateStr = date.format(DateTimeFormatter.ISO_DATE)
             editor.remove("history_$dateStr")
         }
-        editor.commit() // Use commit() for immediate persistence
+        editor.commit()
     }
     
-    fun getTodayHistory(context: Context): Pair<String, Int> {
-        val prefs = getPrefs(context)
-        val today = LocalDate.now().format(DateTimeFormatter.ISO_DATE)
-        val steps = getCurrentSteps(context)
-        prefs.edit().putInt("history_$today", steps).apply()
-        return Pair(today, steps)
-    }
 }
 

@@ -16,16 +16,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -59,14 +55,12 @@ class MainActivity : ComponentActivity() {
     private val requestNotificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
-        // Notification permission granted/denied
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
-        // Request permissions if needed
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -74,7 +68,6 @@ class MainActivity : ComponentActivity() {
             }
         }
         
-        // Request notification permission for Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -84,7 +77,6 @@ class MainActivity : ComponentActivity() {
         
         stepSensorListener = StepSensorListener(this)
         
-        // Set default goal if not set
         val prefs = getSharedPreferences("fitness_tracker_prefs", Context.MODE_PRIVATE)
         if (!prefs.contains("daily_goal")) {
             StepCountManager.setDailyGoal(this, 10000)
@@ -112,7 +104,6 @@ class MainActivity : ComponentActivity() {
     
     override fun onPause() {
         super.onPause()
-        // Save current steps before pausing
         saveCurrentData()
         if (::stepSensorListener.isInitialized) {
             stepSensorListener.stopListening()
@@ -122,7 +113,6 @@ class MainActivity : ComponentActivity() {
     
     override fun onDestroy() {
         super.onDestroy()
-        // Save current steps before destroying
         saveCurrentData()
         if (::stepSensorListener.isInitialized) {
             stepSensorListener.stopListening()
@@ -131,19 +121,15 @@ class MainActivity : ComponentActivity() {
     
     override fun onStop() {
         super.onStop()
-        // Save current steps when app goes to background
         saveCurrentData()
     }
     
     private fun saveCurrentData() {
         try {
-            // Save current steps to ensure data persistence
             val currentSteps = StepCountManager.getCurrentSteps(this)
             StepCountManager.addSteps(this, currentSteps)
-            // Also save to today's history
             StepCountManager.saveDailyHistory(this, currentSteps)
         } catch (e: Exception) {
-            // Ignore any errors during save
         }
     }
 }
@@ -155,7 +141,7 @@ fun FitnessTrackerScreen(context: Context) {
     val uiState by viewModel.uiState.collectAsState()
     
     var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("Today", "History", "Settings")
+    val tabs = listOf("Today", "History")
     
     Scaffold(
         topBar = {
@@ -173,7 +159,6 @@ fun FitnessTrackerScreen(context: Context) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Tab Row
             TabRow(
                 selectedTabIndex = selectedTab,
                 indicator = { tabPositions ->
@@ -193,11 +178,9 @@ fun FitnessTrackerScreen(context: Context) {
                 }
             }
             
-            // Content based on selected tab
             when (selectedTab) {
                 0 -> TodayTab(viewModel, uiState)
                 1 -> HistoryTab(viewModel, uiState)
-                2 -> SettingsTab(viewModel, uiState)
             }
         }
     }
@@ -245,7 +228,6 @@ fun TodayTab(
             }
         }
         
-        // Progress Bar
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -290,7 +272,6 @@ fun TodayTab(
             }
         }
         
-        // Stats Cards
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -513,203 +494,5 @@ fun formatNumber(number: Int): String {
         number >= 1000000 -> "${number / 1000000.0}M"
         number >= 1000 -> "${number / 1000.0}K"
         else -> number.toString()
-    }
-}
-
-@Composable
-fun SettingsTab(
-    viewModel: StepTrackingViewModel,
-    uiState: StepTrackingUiState
-) {
-    var showDialog by remember { mutableStateOf(false) }
-    val dailyGoal = uiState.dailyGoal.toString()
-    val backgroundTracking = uiState.backgroundTrackingEnabled
-    
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    painter = painterResource(android.R.drawable.star_on),
-                    contentDescription = "Goal",
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Daily Goal",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "$dailyGoal steps",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-        
-        Button(
-            onClick = { showDialog = true },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Icon(painter = painterResource(android.R.drawable.ic_menu_edit), contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Change Daily Goal")
-        }
-        
-        // Background Tracking Toggle
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(android.R.drawable.ic_menu_preferences),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text(
-                            text = "Background Tracking",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-    Text(
-                            text = "Track steps even when app is closed",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
-                    }
-                }
-                Switch(
-                    checked = backgroundTracking,
-                        onCheckedChange = { isEnabled ->
-                        viewModel.updateBackgroundTracking(isEnabled)
-                    }
-                )
-            }
-        }
-        
-        InfoCard()
-    }
-    
-    if (showDialog) {
-        GoalDialog(
-            currentGoal = dailyGoal,
-            onDismiss = { showDialog = false },
-            onConfirm = { newGoal ->
-                val goal = newGoal.toIntOrNull()
-                if (goal != null && goal > 0) {
-                    viewModel.setDailyGoal(goal)
-                }
-                showDialog = false
-            }
-        )
-    }
-}
-
-@Composable
-fun GoalDialog(
-    currentGoal: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    var inputGoal by remember { mutableStateOf(currentGoal) }
-    
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Set Daily Goal") },
-        text = {
-            OutlinedTextField(
-                value = inputGoal,
-                onValueChange = { inputGoal = it },
-                label = { Text("Steps") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(inputGoal) }) {
-                Text("Set")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-@Composable
-fun InfoCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                painter = painterResource(android.R.drawable.ic_dialog_info),
-                contentDescription = "Info",
-                modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "How it works",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "This app tracks your steps using your device's built-in sensors. No internet connection required. Your data is stored locally on your device.",
-                fontSize = 14.sp,
-                lineHeight = 20.sp,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f)
-            )
-        }
     }
 }

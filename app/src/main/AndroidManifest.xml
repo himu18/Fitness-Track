@@ -2,15 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Permissions for step counting -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     
-    <!-- Background service permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    
-    <!-- Required features -->
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.stepdetector" android:required="false" />
@@ -36,7 +32,6 @@
             </intent-filter>
         </activity>
         
-        <!-- Background tracking service -->
         <service
             android:name=".StepTrackingService"
             android:enabled="true"

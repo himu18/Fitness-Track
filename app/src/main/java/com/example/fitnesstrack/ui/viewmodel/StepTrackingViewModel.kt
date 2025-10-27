@@ -13,12 +13,10 @@ import kotlinx.coroutines.launch
 
 data class StepTrackingUiState(
     val currentSteps: Int = 0,
-    val dailyGoal: Int = 10000,
+    val dailyGoal: Int = 100,
     val progress: Float = 0f,
     val remainingSteps: Int = 0,
-    val isTracking: Boolean = false,
-    val historyData: List<Pair<String, Int>> = emptyList(),
-    val backgroundTrackingEnabled: Boolean = false
+    val historyData: List<Pair<String, Int>> = emptyList()
 )
 
 class StepTrackingViewModel(application: Application) : AndroidViewModel(application) {
@@ -42,15 +40,12 @@ class StepTrackingViewModel(application: Application) : AndroidViewModel(applica
             0f
         }
         val remainingSteps = (goal - currentSteps).coerceAtLeast(0)
-        val backgroundTracking = context.getSharedPreferences("fitness_tracker_prefs", android.content.Context.MODE_PRIVATE)
-            .getBoolean("background_tracking", false)
         
         _uiState.value = _uiState.value.copy(
             currentSteps = currentSteps,
             dailyGoal = goal,
             progress = progress,
-            remainingSteps = remainingSteps,
-            backgroundTrackingEnabled = backgroundTracking
+            remainingSteps = remainingSteps
         )
     }
     
@@ -96,24 +91,6 @@ class StepTrackingViewModel(application: Application) : AndroidViewModel(applica
         StepCountManager.saveDailyHistory(context, currentSteps)
     }
     
-    fun setDailyGoal(goal: Int) {
-        val context = getApplication<Application>().applicationContext
-        StepCountManager.setDailyGoal(context, goal)
-        
-        val currentSteps = _uiState.value.currentSteps
-        val progress = if (goal > 0) {
-            (currentSteps.toFloat() / goal).coerceIn(0f, 1f)
-        } else {
-            0f
-        }
-        val remainingSteps = (goal - currentSteps).coerceAtLeast(0)
-        
-        _uiState.value = _uiState.value.copy(
-            dailyGoal = goal,
-            progress = progress,
-            remainingSteps = remainingSteps
-        )
-    }
     
     fun loadHistoryData() {
         val context = getApplication<Application>().applicationContext
@@ -126,28 +103,5 @@ class StepTrackingViewModel(application: Application) : AndroidViewModel(applica
         }
     }
     
-    fun updateBackgroundTracking(enabled: Boolean) {
-        val context = getApplication<Application>().applicationContext
-        context.getSharedPreferences("fitness_tracker_prefs", android.content.Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean("background_tracking", enabled)
-            .apply()
-        
-        _uiState.value = _uiState.value.copy(
-            backgroundTrackingEnabled = enabled
-        )
-        
-        if (enabled) {
-            StepTrackingService.startService(context)
-        } else {
-            StepTrackingService.stopService(context)
-        }
-    }
-    
-    fun setTrackingState(isTracking: Boolean) {
-        _uiState.value = _uiState.value.copy(
-            isTracking = isTracking
-        )
-    }
 }
 

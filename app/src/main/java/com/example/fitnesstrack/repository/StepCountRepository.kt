@@ -3,10 +3,6 @@ package com.example.fitnesstrack.repository
 import android.content.Context
 import com.example.fitnesstrack.StepCountManager
 
-/**
- * Repository for managing step count data
- * This abstracts the data source (SharedPreferences) from the ViewModel
- */
 class StepCountRepository(private val context: Context) {
     
     fun getCurrentSteps(): Int {
