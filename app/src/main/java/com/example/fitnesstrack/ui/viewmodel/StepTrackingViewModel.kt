@@ -33,7 +33,10 @@ class StepTrackingViewModel(application: Application) : AndroidViewModel(applica
     private fun loadInitialState() {
         val context = getApplication<Application>().applicationContext
         val currentSteps = StepCountManager.getCurrentSteps(context)
+        
+        // Default goal is 100
         val goal = StepCountManager.getDailyGoal(context)
+        
         val progress = if (goal > 0) {
             (currentSteps.toFloat() / goal).coerceIn(0f, 1f)
         } else {

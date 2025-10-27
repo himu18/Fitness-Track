@@ -78,8 +78,10 @@ class StepTrackingService : Service() {
     
     companion object {
         fun startService(context: Context) {
-            val intent = Intent(context, StepTrackingService::class.java)
-            context.startForegroundService(intent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val intent = Intent(context, StepTrackingService::class.java)
+                context.startForegroundService(intent)
+            }
         }
         
         fun stopService(context: Context) {

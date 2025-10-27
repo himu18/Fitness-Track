@@ -78,9 +78,11 @@ class MainActivity : ComponentActivity() {
         stepSensorListener = StepSensorListener(this)
         
         val prefs = getSharedPreferences("fitness_tracker_prefs", Context.MODE_PRIVATE)
-        if (!prefs.contains("daily_goal")) {
-            StepCountManager.setDailyGoal(this, 10000)
-        }
+        // Set default goal to 100 steps
+        StepCountManager.setDailyGoal(this, 100)
+        
+        // Start foreground service to track steps in background
+        StepTrackingService.startService(this)
         
         setContent {
             FitnessTrackTheme {
