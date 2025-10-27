@@ -72,12 +72,17 @@ object StepCountManager {
     
     fun getHistoryData(context: Context, days: Int = 7): List<Pair<String, Int>> {
         val prefs = getPrefs(context)
-        val history = mutableListOf<Pair<String, Int>>()
         val formatter = DateTimeFormatter.ISO_DATE
         val today = LocalDate.now()
         
+        // Save current day's steps to history
         val currentSteps = getCurrentSteps(context)
         saveDailyHistory(context, currentSteps)
+        
+        // Clean up old data (keep only last 7 days)
+        cleanupOldHistory(context)
+        
+        val history = mutableListOf<Pair<String, Int>>()
         
         for (i in 0 until days) {
             val date = today.minusDays(i.toLong())
@@ -89,20 +94,18 @@ object StepCountManager {
         return history.reversed()
     }
     
-    fun getHistoryStats(context: Context, days: Int = 30): Map<String, Any> {
-        val history = getHistoryData(context, days)
-        val totalSteps = history.sumOf { it.second }
-        val averageSteps = if (history.isNotEmpty()) totalSteps / history.size else 0
-        val maxSteps = history.maxOfOrNull { it.second } ?: 0
-        val minSteps = history.minOfOrNull { it.second } ?: 0
+    private fun cleanupOldHistory(context: Context) {
+        val prefs = getPrefs(context)
+        val editor = prefs.edit()
+        val today = LocalDate.now()
         
-        return mapOf(
-            "total" to totalSteps,
-            "average" to averageSteps,
-            "max" to maxSteps,
-            "min" to minSteps,
-            "days" to history.size
-        )
+        // Remove data older than 7 days
+        for (i in 7..30) {
+            val date = today.minusDays(i.toLong())
+            val dateStr = date.format(DateTimeFormatter.ISO_DATE)
+            editor.remove("history_$dateStr")
+        }
+        editor.apply()
     }
     
     fun getTodayHistory(context: Context): Pair<String, Int> {

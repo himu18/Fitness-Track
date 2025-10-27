@@ -353,76 +353,22 @@ fun HistoryTab(
     viewModel: StepTrackingViewModel,
     uiState: StepTrackingUiState
 ) {
-    var selectedPeriod by remember { mutableStateOf(7) }
-    
-    LaunchedEffect(selectedPeriod) {
-        viewModel.loadHistoryData(selectedPeriod)
+    LaunchedEffect(Unit) {
+        viewModel.loadHistoryData()
     }
     
     val historyData = uiState.historyData
-    val stats = uiState.historyStats
-    val average = (stats["average"] as? Number)?.toInt() ?: 0
-    val total = (stats["total"] as? Number)?.toInt() ?: 0
-    val max = (stats["max"] as? Number)?.toInt() ?: 0
     
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(16.dp)
     ) {
-        // Period selector
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            FilterChip(
-                selected = selectedPeriod == 7,
-                onClick = { selectedPeriod = 7 },
-                label = { Text("7 Days") }
-            )
-            FilterChip(
-                selected = selectedPeriod == 30,
-                onClick = { selectedPeriod = 30 },
-                label = { Text("30 Days") }
-            )
-        }
-        
-        // Statistics
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            StatCard(
-                modifier = Modifier.weight(1f),
-                label = "Total",
-                value = formatNumber(total),
-                icon = android.R.drawable.ic_menu_mylocation
-            )
-            StatCard(
-                modifier = Modifier.weight(1f),
-                label = "Average",
-                value = formatNumber(average),
-                icon = android.R.drawable.checkbox_off_background
-            )
-        }
-        
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            StatCard(
-                modifier = Modifier.weight(1f),
-                label = "Max",
-                value = formatNumber(max),
-                icon = android.R.drawable.star_on
-            )
-        }
-        
         Text(
-            text = "Daily History",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
+            text = "Last 7 Days",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
         
         if (historyData.isEmpty()) {
@@ -447,39 +393,11 @@ fun HistoryTab(
                 }
             }
         } else {
-            if (historyData.any { it.second > 0 }) {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(historyData) { (date, steps) ->
-                        HistoryItem(date = date, steps = steps, goal = uiState.dailyGoal)
-                    }
-                }
-            } else {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            painter = painterResource(android.R.drawable.checkbox_off_background),
-                            contentDescription = "No data",
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "No history yet",
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
-                        Text(
-                            text = "Start walking to see your history",
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        )
-                    }
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(historyData) { (date, steps) ->
+                    HistoryItem(date = date, steps = steps, goal = uiState.dailyGoal)
                 }
             }
         }

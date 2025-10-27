@@ -18,9 +18,7 @@ data class StepTrackingUiState(
     val remainingSteps: Int = 0,
     val isTracking: Boolean = false,
     val historyData: List<Pair<String, Int>> = emptyList(),
-    val backgroundTrackingEnabled: Boolean = false,
-    val historyStats: Map<String, Any> = emptyMap(),
-    val historyDays: Int = 7
+    val backgroundTrackingEnabled: Boolean = false
 )
 
 class StepTrackingViewModel(application: Application) : AndroidViewModel(application) {
@@ -102,16 +100,13 @@ class StepTrackingViewModel(application: Application) : AndroidViewModel(applica
         )
     }
     
-    fun loadHistoryData(days: Int = 7) {
+    fun loadHistoryData() {
         val context = getApplication<Application>().applicationContext
-        val history = StepCountManager.getHistoryData(context, days)
-        val stats = StepCountManager.getHistoryStats(context, days)
+        val history = StepCountManager.getHistoryData(context, 7)
         
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
-                historyData = history,
-                historyStats = stats,
-                historyDays = days
+                historyData = history
             )
         }
     }
