@@ -59,7 +59,6 @@ class StepTrackingViewModel(application: Application) : AndroidViewModel(applica
                 updateSteps()
                 delay(1000)
                 
-                // Save data to persistent storage every 10 seconds
                 saveCounter++
                 if (saveCounter >= 10) {
                     saveDataToStorage()

@@ -9,7 +9,6 @@ import android.hardware.SensorManager
 class StepSensorListener(private val context: Context) : SensorEventListener {
     
     private val sensorManager: SensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private var accelerometer: Sensor? = null
     private var stepDetector: Sensor? = null
     private var stepCounter: Sensor? = null
     
