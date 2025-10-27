@@ -37,6 +37,11 @@ class StepSensorListener(private val context: Context) : SensorEventListener {
                         isInitialized = true
                         previousSensorSteps = sensorSteps
                     } else {
+                        // Check if goal is already achieved before processing new steps
+                        if (StepCountManager.isGoalAchieved(context)) {
+                            return
+                        }
+                        
                         val newSteps = if (sensorSteps >= previousSensorSteps) {
                             sensorSteps - previousSensorSteps
                         } else {
@@ -52,6 +57,11 @@ class StepSensorListener(private val context: Context) : SensorEventListener {
                     }
                 }
                 Sensor.TYPE_STEP_DETECTOR -> {
+                    // Check if goal is already achieved
+                    if (StepCountManager.isGoalAchieved(context)) {
+                        return
+                    }
+                    
                     if (it.values[0] == 1f) {
                         val storedSteps = StepCountManager.getStoredSteps(context)
                         StepCountManager.addSteps(context, storedSteps + 1)

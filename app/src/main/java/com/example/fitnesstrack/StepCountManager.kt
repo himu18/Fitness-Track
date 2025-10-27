@@ -11,6 +11,7 @@ object StepCountManager {
     private const val KEY_DAILY_GOAL = "daily_goal"
     private const val KEY_LAST_DATE = "last_date"
     private const val KEY_STEP_COUNTER_BASE = "step_counter_base"
+    private const val KEY_GOAL_ACHIEVED = "goal_achieved"
     
     private fun getPrefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -45,10 +46,37 @@ object StepCountManager {
     
     fun addSteps(context: Context, steps: Int) {
         val prefs = getPrefs(context)
+        val goal = getDailyGoal(context)
+        
+        // Stop counting if goal is already achieved
+        if (prefs.getBoolean(KEY_GOAL_ACHIEVED, false)) {
+            return
+        }
+        
+        // Cap steps at goal limit
+        val cappedSteps = steps.coerceAtMost(goal)
+        
         prefs.edit()
-            .putInt(KEY_CURRENT_STEPS, steps)
+            .putInt(KEY_CURRENT_STEPS, cappedSteps)
             .putString(KEY_LAST_DATE, LocalDate.now().format(DateTimeFormatter.ISO_DATE))
-            .commit() // Use commit() instead of apply() for immediate persistence
+            .commit()
+        
+        // Mark goal as achieved if reached
+        if (cappedSteps >= goal) {
+            prefs.edit().putBoolean(KEY_GOAL_ACHIEVED, true).commit()
+        }
+    }
+    
+    fun isGoalAchieved(context: Context): Boolean {
+        val prefs = getPrefs(context)
+        val goal = getDailyGoal(context)
+        val currentSteps = prefs.getInt(KEY_CURRENT_STEPS, 0)
+        return prefs.getBoolean(KEY_GOAL_ACHIEVED, false) || currentSteps >= goal
+    }
+    
+    fun resetGoalAchieved(context: Context) {
+        val prefs = getPrefs(context)
+        prefs.edit().putBoolean(KEY_GOAL_ACHIEVED, false).commit()
     }
     
     fun saveStepsPersistently(context: Context, steps: Int) {
@@ -77,6 +105,7 @@ object StepCountManager {
             .putInt(KEY_CURRENT_STEPS, 0)
             .putString(KEY_LAST_DATE, today)
             .putInt(KEY_STEP_COUNTER_BASE, -1)
+            .putBoolean(KEY_GOAL_ACHIEVED, false) // Reset goal achievement
             .commit()
     }
     
