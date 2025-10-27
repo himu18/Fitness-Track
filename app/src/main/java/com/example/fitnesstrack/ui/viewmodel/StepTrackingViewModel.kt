@@ -56,9 +56,17 @@ class StepTrackingViewModel(application: Application) : AndroidViewModel(applica
     
     private fun startPeriodicUpdates() {
         viewModelScope.launch {
+            var saveCounter = 0
             while (true) {
                 updateSteps()
                 delay(1000)
+                
+                // Save data to persistent storage every 10 seconds
+                saveCounter++
+                if (saveCounter >= 10) {
+                    saveDataToStorage()
+                    saveCounter = 0
+                }
             }
         }
     }
@@ -79,6 +87,13 @@ class StepTrackingViewModel(application: Application) : AndroidViewModel(applica
             progress = progress,
             remainingSteps = remainingSteps
         )
+    }
+    
+    private fun saveDataToStorage() {
+        val context = getApplication<Application>().applicationContext
+        val currentSteps = _uiState.value.currentSteps
+        StepCountManager.saveStepsPersistently(context, currentSteps)
+        StepCountManager.saveDailyHistory(context, currentSteps)
     }
     
     fun setDailyGoal(goal: Int) {

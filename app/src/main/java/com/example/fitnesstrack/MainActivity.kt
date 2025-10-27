@@ -112,6 +112,8 @@ class MainActivity : ComponentActivity() {
     
     override fun onPause() {
         super.onPause()
+        // Save current steps before pausing
+        saveCurrentData()
         if (::stepSensorListener.isInitialized) {
             stepSensorListener.stopListening()
             isTracking = false
@@ -120,8 +122,28 @@ class MainActivity : ComponentActivity() {
     
     override fun onDestroy() {
         super.onDestroy()
+        // Save current steps before destroying
+        saveCurrentData()
         if (::stepSensorListener.isInitialized) {
             stepSensorListener.stopListening()
+        }
+    }
+    
+    override fun onStop() {
+        super.onStop()
+        // Save current steps when app goes to background
+        saveCurrentData()
+    }
+    
+    private fun saveCurrentData() {
+        try {
+            // Save current steps to ensure data persistence
+            val currentSteps = StepCountManager.getCurrentSteps(this)
+            StepCountManager.addSteps(this, currentSteps)
+            // Also save to today's history
+            StepCountManager.saveDailyHistory(this, currentSteps)
+        } catch (e: Exception) {
+            // Ignore any errors during save
         }
     }
 }
