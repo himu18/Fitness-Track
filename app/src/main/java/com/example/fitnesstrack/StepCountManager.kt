@@ -10,6 +10,7 @@ object StepCountManager {
     private const val KEY_CURRENT_STEPS = "current_steps"
     private const val KEY_DAILY_GOAL = "daily_goal"
     private const val KEY_LAST_DATE = "last_date"
+    private const val KEY_STEP_COUNTER_BASE = "step_counter_base"
     
     private fun getPrefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -25,6 +26,21 @@ object StepCountManager {
         }
         
         return prefs.getInt(KEY_CURRENT_STEPS, 0)
+    }
+    
+    fun getStoredSteps(context: Context): Int {
+        val prefs = getPrefs(context)
+        return prefs.getInt(KEY_CURRENT_STEPS, 0)
+    }
+    
+    fun getStepCounterBase(context: Context): Int {
+        val prefs = getPrefs(context)
+        return prefs.getInt(KEY_STEP_COUNTER_BASE, -1)
+    }
+    
+    fun setStepCounterBase(context: Context, baseValue: Int) {
+        val prefs = getPrefs(context)
+        prefs.edit().putInt(KEY_STEP_COUNTER_BASE, baseValue).commit()
     }
     
     fun addSteps(context: Context, steps: Int) {
@@ -59,9 +75,11 @@ object StepCountManager {
             }
         }
         
+        // Reset for new day
         prefs.edit()
             .putInt(KEY_CURRENT_STEPS, 0)
             .putString(KEY_LAST_DATE, today)
+            .putInt(KEY_STEP_COUNTER_BASE, -1) // Reset base for new day
             .commit() // Use commit() for immediate persistence
     }
     
